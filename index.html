@@ -395,14 +395,14 @@ function renderItems(){
     const toggle = document.createElement('button');
 
 // ข้อความและสีเริ่มต้น
-toggle.textContent = it.watched ? 'ดูแล้ว' : 'ยังไม่ดู';
+toggle.textContent = it.watched ? 'ดูแล้ว' : 'ยังไม่จบ';
 toggle.style.backgroundColor = it.watched ? 'red' : 'green';
 toggle.style.color = 'white';
 
 // เมื่อคลิกปุ่ม
 toggle.addEventListener('click', () => {
   it.watched = !it.watched;
-  toggle.textContent = it.watched ? 'ดูแล้ว' : 'ยังไม่ดู';
+  toggle.textContent = it.watched ? 'ดูแล้ว' : 'ยังไม่จบ';
   toggle.style.backgroundColor = it.watched ? 'red' : 'green';
   toggle.style.color = 'white';
   save();
