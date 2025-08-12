@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Watchlist — หนัง/ซีรีย์ที่ชอบ</title>
+
+  <style>
+    :root{
+      --primary: #0ea5e9;
+      --glass-blur: 14px;
+      --app-font-size: 16px;
+      --card-bg: rgba(255,255,255,0.06);
+      --card-border: rgba(255,255,255,0.08);
+      --text: #0b1220;
+      --muted: rgba(11,18,32,0.6);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, rgba(20,24,30,0.96), rgba(10,12,16,0.96));
+      color: white;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      font-size:var(--app-font-size);
+      background-size:cover;
+      background-position:center;
+    }
+
+    /* container */
+    .wrap{max-width:1100px;margin:28px auto;padding:18px}
+
+    /* header */
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;color:white;background:linear-gradient(135deg,var(--primary),#7dd3fc)}
+    .title h1{margin:0;font-size:20px}
+    .title p{margin:0;font-size:12px;opacity:.85}
+
+    /* controls */
+    .controls{display:flex;align-items:center;gap:8px}
+    input[type="text"], input[type="url"], select, textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:white}
+    textarea{min-height:64px;resize:vertical}
+    button{cursor:pointer;border-radius:10px;padding:8px 12px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:white}
+    .btn-primary{background:var(--primary);color:#06202b;border:0}
+
+    /* glass card */
+    .glass{
+      background: var(--card-bg);
+      border:1px solid var(--card-border);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border-radius:14px;
+    }
+
+    /* form */
+    .form{padding:14px;margin-bottom:18px}
+    .grid{display:grid;gap:10px}
+    .cols-3{grid-template-columns: 1fr 160px 1fr}
+    .cols-2{grid-template-columns: 1fr 1fr}
+    .row{display:flex;gap:8px}
+
+    /* list */
+    .grid-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+    .card{overflow:hidden;display:flex;flex-direction:column}
+    .card .body{display:flex;gap:12px;padding:12px}
+    .poster{width:96px;height:136px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(255,255,255,.7)}
+    .meta h4{margin:0;font-size:16px}
+    .meta .sub{font-size:12px;opacity:.85;margin-top:6px}
+    .meta .notes{margin-top:8px;font-size:13px;color:rgba(255,255,255,0.9)}
+    .card .footer{padding:10px;border-top:1px solid rgba(255,255,255,0.03);font-size:12px;display:flex;align-items:center;justify-content:space-between;opacity:.9}
+
+    .rating-buttons button{min-width:28px;padding:6px 6px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit}
+    .rating-buttons .active{background:rgba(255,255,255,0.12)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* small */
+    .muted{opacity:.65;font-size:13px}
+    .center{text-align:center}
+    .hidden{display:none}
+
+    /* responsive tweaks */
+    @media (max-width:640px){
+      .cols-3{grid-template-columns:1fr}
+      .controls .search{display:none}
+      .wrap{padding:12px}
+    }
+
+    /* subtle vignette */
+    .vignette{position:fixed;left:0;right:0;top:0;bottom:0;pointer-events:none;background:radial-gradient(1000px 600px at 10% 10%, rgba(0,0,0,0.12), transparent 20%), radial-gradient(1000px 600px at 90% 90%, rgba(0,0,0,0.08), transparent 20%)}
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+    <header class="header">
+      <div class="brand">
+        <div class="logo">WL</div>
+        <div class="title">
+          <h1>Watchlist</h1>
+          <p>บันทึกหนัง / ซีรีย์ที่เคยดูและชอบ — เก็บไว้ให้จำ</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input id="q" class="search" type="text" placeholder="ค้นหา...">
+        <select id="filter">
+          <option value="all">ทั้งหมด</option>
+          <option value="movie">หนัง</option>
+          <option value="series">ซีรีส์</option>
+        </select>
+        <select id="sort">
+          <option value="recent">ล่าสุด</option>
+          <option value="rating">คะแนนสูงสุด</option>
+          <option value="title">ชื่อ (A-Z)</option>
+        </select>
+        <button id="btn-settings">Settings</button>
+        <button id="btn-clear">Clear</button>
+      </div>
+    </header>
+
+    <!-- form -->
+    <section class="glass form">
+      <form id="item-form" class="grid cols-3">
+        <input id="title" type="text" placeholder="ชื่อเรื่อง / Title" required>
+        <select id="type">
+          <option value="movie">Movie (หนัง)</option>
+          <option value="series">Series (ซีรีส์)</option>
+        </select>
+        <input id="year" type="text" placeholder="ปี (Year)">
+
+        <input id="provider" type="text" placeholder="ผู้ให้บริการ / Provider (e.g. Netflix)">
+        <input id="link" type="url" placeholder="Link to watch (URL)">
+        <input id="poster" type="url" placeholder="Poster URL (optional)">
+
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="min-width:60px">Rating</label>
+          <div id="rate-input" class="rating-buttons"></div>
+        </div>
+
+        <textarea id="notes" placeholder="Notes / ความเห็นสั้นๆ" style="grid-column: 1 / -1"></textarea>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;grid-column: 1 / -1">
+          <button type="button" id="btn-cancel" class="hidden">ยกเลิก</button>
+          <button type="submit" class="btn-primary">เพิ่มลงในรายการ</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- settings -->
+    <section id="settings" class="glass" style="padding:12px;margin-top:12px;display:none">
+      <h3 style="margin:0 0 8px 0">Settings</h3>
+      <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr">
+        <div>
+          <label>Primary color</label><br>
+          <input id="primary-color" type="color" value="#0ea5e9">
+        </div>
+        <div>
+          <label>Background image URL</label><br>
+          <input id="bg-url" type="url" placeholder="https://..." style="width:100%">
+        </div>
+        <div>
+          <label>Glass blur</label><br>
+          <input id="blur-range" type="range" min="0" max="40" value="14" style="width:100%">
+        </div>
+        <div>
+          <label>App font size</label><br>
+          <input id="font-range" type="range" min="12" max="20" value="16" style="width:100%">
+        </div>
+        <div>
+          <button id="btn-reset">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- items -->
+    <main style="margin-top:14px">
+      <div id="items" class="grid-items"></div>
+      <div id="empty" class="center muted" style="margin-top:18px">ไม่มีรายการ — ลองเพิ่มเรื่องโปรดของคุณ</div>
+    </main>
+
+    <footer style="margin-top:18px;text-align:center;opacity:.8">Made with ❤️ — Save to GitHub and enable GitHub Pages to publish</footer>
+  </div>
+
+  <div class="vignette"></div>
+
+<script>
+/* -----------------------
+   Simple Watchlist App
+   - Persist in localStorage
+   - Vanilla JS
+   ----------------------- */
+
+const LS_KEY = 'watchlist_items_v1';
+const LS_SETTINGS = 'watchlist_settings_v1';
+
+const defaultSettings = { primary:'#0ea5e9', blur:14, bgImage:'', fontSize:16 };
+
+let state = {
+  items: [],
+  editingId: null,
+  ratingTemp: 0,
+  settings: { ...defaultSettings },
+};
+
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+// DOM refs
+const form = document.getElementById('item-form');
+const titleI = document.getElementById('title');
+const typeI = document.getElementById('type');
+const yearI = document.getElementById('year');
+const providerI = document.getElementById('provider');
+const linkI = document.getElementById('link');
+const posterI = document.getElementById('poster');
+const notesI = document.getElementById('notes');
+const rateInput = document.getElementById('rate-input');
+const itemsWrap = document.getElementById('items');
+const emptyDiv = document.getElementById('empty');
+
+const q = $('#q');
+const filter = $('#filter');
+const sort = $('#sort');
+const btnSettings = $('#btn-settings');
+const settingsPanel = $('#settings');
+const btnClear = $('#btn-clear');
+const btnCancel = $('#btn-cancel');
+
+const primaryColor = $('#primary-color');
+const bgUrl = $('#bg-url');
+const blurRange = $('#blur-range');
+const fontRange = $('#font-range');
+const btnReset = $('#btn-reset');
+
+// init
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    state.items = raw ? JSON.parse(raw) : [
+      { id:uid(), title:'Example Movie', type:'movie', year:'2021', provider:'Apple TV+', poster:'', rating:8, notes:'ชอบมาก บทดี', watched:true, addedAt: Date.now()-86400000 },
+      { id:uid(), title:'Example Series', type:'series', year:'2019', provider:'Netflix', poster:'', rating:9, notes:'ซีซั่นแรกยอดเยี่ยม', watched:true, addedAt: Date.now()-172800000 }
+    ];
+  }catch(e){ state.items = []; }
+
+  try{
+    const rawS = localStorage.getItem(LS_SETTINGS);
+    state.settings = rawS ? JSON.parse(rawS) : {...defaultSettings};
+  }catch(e){ state.settings = {...defaultSettings}; }
+}
+
+function save(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state.items));
+  localStorage.setItem(LS_SETTINGS, JSON.stringify(state.settings));
+}
+
+/* UI helpers */
+function setCSSVars(){
+  document.documentElement.style.setProperty('--primary', state.settings.primary);
+  document.documentElement.style.setProperty('--glass-blur', state.settings.blur + 'px');
+  document.documentElement.style.setProperty('--app-font-size', state.settings.fontSize + 'px');
+  if(state.settings.bgImage) document.body.style.backgroundImage = `url('${state.settings.bgImage}')`;
+  else document.body.style.backgroundImage = '';
+}
+
+/* rating input render */
+function renderRatingInput(){
+  rateInput.innerHTML = '';
+  for(let i=1;i<=10;i++){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = i;
+    b.style.minWidth='28px';
+    b.style.marginRight='4px';
+    if(i <= state.ratingTemp) b.classList.add('active');
+    b.addEventListener('click', ()=> {
+      state.ratingTemp = i;
+      renderRatingInput();
+    });
+    rateInput.appendChild(b);
+  }
+}
+
+/* render list */
+function renderItems(){
+  const query = q.value.trim().toLowerCase();
+  const ft = filter.value;
+  const sd = sort.value;
+
+  let list = state.items.filter(it => (ft==='all') || it.type===ft);
+  if(query) list = list.filter(it => (it.title + it.notes + it.year + it.provider).toLowerCase().includes(query));
+  if(sd === 'recent') list.sort((a,b)=> b.addedAt - a.addedAt);
+  if(sd === 'rating') list.sort((a,b)=> b.rating - a.rating);
+  if(sd === 'title') list.sort((a,b)=> a.title.localeCompare(b.title));
+
+  itemsWrap.innerHTML = '';
+  if(list.length === 0){ emptyDiv.style.display='block'; }
+  else { emptyDiv.style.display='none'; }
+
+  list.forEach(it => {
+    const card = document.createElement('article');
+    card.className = 'glass card';
+
+    const body = document.createElement('div');
+    body.className = 'body';
+
+    const poster = document.createElement('div');
+    poster.className = 'poster';
+    if(it.poster){
+      const img = document.createElement('img');
+      img.src = it.poster;
+      img.alt = 'poster';
+      img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
+      poster.innerHTML = '';
+      poster.appendChild(img);
+    } else {
+      poster.textContent = 'No poster';
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.style.flex='1';
+
+    const h4 = document.createElement('h4');
+    h4.textContent = `${it.title} ${it.year ? '('+it.year+')' : ''}`;
+    const sub = document.createElement('div');
+    sub.className = 'sub muted';
+    sub.textContent = `${it.type} • ${it.provider || ''}`;
+
+    const notes = document.createElement('div');
+    notes.className = 'notes';
+    notes.textContent = it.notes || '';
+
+    const right = document.createElement('div');
+    right.style.textAlign='right';
+    right.style.minWidth='78px';
+    const ratingDiv = document.createElement('div');
+    ratingDiv.innerHTML = it.rating ? `<strong>${it.rating}/10</strong>` : `<span style="opacity:.7">ยังไม่ได้ให้คะแนน</span>`;
+
+    const ratingButtons = document.createElement('div');
+    ratingButtons.className = 'rating-buttons';
+    for(let i=1;i<=10;i++){
+      const rb = document.createElement('button');
+      rb.textContent = i;
+      if(i <= it.rating) rb.classList.add('active');
+      rb.addEventListener('click', ()=> {
+        it.rating = i;
+        save();
+        renderItems();
+      });
+      ratingButtons.appendChild(rb);
+    }
+    right.appendChild(ratingDiv);
+    right.appendChild(ratingButtons);
+
+    meta.appendChild(h4);
+    meta.appendChild(sub);
+    meta.appendChild(notes);
+
+    body.appendChild(poster);
+    body.appendChild(meta);
+    body.appendChild(right);
+
+    const footer = document.createElement('div');
+    footer.className = 'footer';
+    const leftF = document.createElement('div');
+    leftF.className='muted';
+    leftF.textContent = 'Added: ' + new Date(it.addedAt).toLocaleDateString();
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    if(it.link){
+      const a = document.createElement('a');
+      a.href = it.link;
+      a.target = '_blank';
+      a.rel = 'noreferrer';
+      const btn = document.createElement('button');
+      btn.textContent = 'ไปดู';
+      btn.className='btn-link';
+      a.appendChild(btn);
+      actions.appendChild(a);
+    }
+
+    const toggle = document.createElement('button');
+    toggle.textContent = it.watched ? 'Watched' : 'Toggle';
+    toggle.addEventListener('click', ()=> {
+      it.watched = !it.watched; save(); renderItems();
+    });
+    actions.appendChild(toggle);
+
+    const edit = document.createElement('button');
+    edit.textContent = 'แก้ไข';
+    edit.addEventListener('click', ()=> startEdit(it));
+    actions.appendChild(edit);
+
+    const del = document.createElement('button');
+    del.textContent = 'ลบ';
+    del.style.color = '#ff6b6b';
+    del.addEventListener('click', ()=> {
+      if(confirm('ลบรายการนี้หรือไม่?')) {
+        state.items = state.items.filter(x=> x.id !== it.id); save(); renderItems();
+      }
+    });
+    actions.appendChild(del);
+
+    footer.appendChild(leftF);
+    footer.appendChild(actions);
+
+    card.appendChild(body);
+    card.appendChild(footer);
+
+    itemsWrap.appendChild(card);
+  });
+}
+
+/* form handlers */
+form.addEventListener('submit', e=>{
+  e.preventDefault();
+  const payload = {
+    id: state.editingId || uid(),
+    title: titleI.value.trim(),
+    type: typeI.value,
+    year: yearI.value.trim(),
+    provider: providerI.value.trim(),
+    link: linkI.value.trim(),
+    poster: posterI.value.trim(),
+    rating: state.ratingTemp || 0,
+    notes: notesI.value.trim(),
+    watched: false,
+    addedAt: state.editingId ? (state.items.find(it=>it.id===state.editingId).addedAt) : Date.now()
+  };
+
+  if(!payload.title){ alert('กรุณาใส่ชื่อเรื่อง'); return; }
+
+  if(state.editingId){
+    state.items = state.items.map(it => it.id === state.editingId ? payload : it);
+    state.editingId = null;
+    btnCancel.classList.add('hidden');
+  } else {
+    state.items.unshift(payload);
+  }
+  // reset
+  form.reset();
+  state.ratingTemp = 0;
+  save();
+  renderRatingInput();
+  renderItems();
+});
+
+/* rating input quick init */
+renderRatingInput();
+
+/* quick set rating by clicking numeric buttons in form */
+rateInput.addEventListener('click', e=>{
+  if(e.target.tagName === 'BUTTON'){
+    // handled in renderRatingInput click
+  }
+});
+
+/* search/filter/sort */
+[q, filter, sort].forEach(el => el.addEventListener('input', ()=> renderItems()));
+
+/* settings toggle */
+btnSettings.addEventListener('click', ()=> {
+  settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
+});
+
+/* clear all */
+btnClear.addEventListener('click', ()=> {
+  if(confirm('ล้างรายการทั้งหมดหรือไม่? (จะไม่สามารถกู้คืนได้)')){
+    state.items = [];
+    save();
+    renderItems();
+  }
+});
+
+/* cancel edit */
+btnCancel.addEventListener('click', ()=> {
+  state.editingId = null;
+  form.reset();
+  state.ratingTemp = 0;
+  renderRatingInput();
+  btnCancel.classList.add('hidden');
+});
+
+/* settings controls */
+primaryColor.addEventListener('input', ()=> {
+  state.settings.primary = primaryColor.value;
+  setCSSVars();
+  save();
+});
+bgUrl.addEventListener('change', ()=> {
+  state.settings.bgImage = bgUrl.value.trim();
+  setCSSVars();
+  save();
+});
+blurRange.addEventListener('input', ()=> {
+  state.settings.blur = Number(blurRange.value);
+  setCSSVars();
+  save();
+});
+fontRange.addEventListener('input', ()=> {
+  state.settings.fontSize = Number(fontRange.value);
+  setCSSVars();
+  save();
+});
+btnReset.addEventListener('click', ()=> {
+  state.settings = {...defaultSettings};
+  primaryColor.value = state.settings.primary;
+  bgUrl.value = '';
+  blurRange.value = state.settings.blur;
+  fontRange.value = state.settings.fontSize;
+  setCSSVars();
+  save();
+});
+
+/* edit flow */
+function startEdit(it){
+  state.editingId = it.id;
+  titleI.value = it.title;
+  typeI.value = it.type || 'movie';
+  yearI.value = it.year || '';
+  providerI.value = it.provider || '';
+  linkI.value = it.link || '';
+  posterI.value = it.poster || '';
+  notesI.value = it.notes || '';
+  state.ratingTemp = it.rating || 0;
+  renderRatingInput();
+  btnCancel.classList.remove('hidden');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* initial load */
+load();
+primaryColor.value = state.settings.primary;
+bgUrl.value = state.settings.bgImage || '';
+blurRange.value = state.settings.blur;
+fontRange.value = state.settings.fontSize;
+setCSSVars();
+renderRatingInput();
+renderItems();
+
+/* small UX: allow Enter to submit search */
+q.addEventListener('keydown', e=> { if(e.key === 'Enter'){ e.preventDefault(); renderItems(); } });
+
+</script>
+</body>
+</html>
