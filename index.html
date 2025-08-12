@@ -119,6 +119,7 @@
           <option value="title">ชื่อ (A-Z)</option>
         </select>
         <button id="btn-settings">Settings</button>
+        <!-- ปุ่ม Clear ถูกลบออก -->
       </div>
     </header>
 
@@ -207,7 +208,6 @@ let state = {
 };
 
 const $ = sel => document.querySelector(sel);
-const $$ = sel => Array.from(document.querySelectorAll(sel));
 
 // DOM refs
 const form = document.getElementById('item-form');
@@ -227,8 +227,6 @@ const filter = $('#filter');
 const sort = $('#sort');
 const btnSettings = $('#btn-settings');
 const settingsPanel = $('#settings');
-// ปุ่ม Clear ถูกลบออกแล้ว
-// const btnClear = $('#btn-clear');
 const btnCancel = $('#btn-cancel');
 
 const primaryColor = $('#primary-color');
@@ -237,16 +235,14 @@ const blurRange = $('#blur-range');
 const fontRange = $('#font-range');
 const btnReset = $('#btn-reset');
 
-// init
+// Generate unique ID
 function uid(){ return Math.random().toString(36).slice(2,9); }
 
+// Load data & settings from localStorage
 function load(){
   try{
     const raw = localStorage.getItem(LS_KEY);
-    state.items = raw ? JSON.parse(raw) : [
-      { id:uid(), title:'Example Movie', type:'movie', year:'2021', provider:'Apple TV+', poster:'', rating:8, notes:'ชอบมาก บทดี', watched:true, addedAt: Date.now()-86400000 },
-      { id:uid(), title:'Example Series', type:'series', year:'2019', provider:'Netflix', poster:'', rating:9, notes:'ซีซั่นแรกยอดเยี่ยม', watched:true, addedAt: Date.now()-172800000 }
-    ];
+    state.items = raw ? JSON.parse(raw) : [];
   }catch(e){ state.items = []; }
 
   try{
@@ -255,12 +251,13 @@ function load(){
   }catch(e){ state.settings = {...defaultSettings}; }
 }
 
+// Save data & settings to localStorage
 function save(){
   localStorage.setItem(LS_KEY, JSON.stringify(state.items));
   localStorage.setItem(LS_SETTINGS, JSON.stringify(state.settings));
 }
 
-/* UI helpers */
+// Apply CSS variables for settings
 function setCSSVars(){
   document.documentElement.style.setProperty('--primary', state.settings.primary);
   document.documentElement.style.setProperty('--glass-blur', state.settings.blur + 'px');
@@ -269,7 +266,7 @@ function setCSSVars(){
   else document.body.style.backgroundImage = '';
 }
 
-/* rating input render */
+// Render rating input buttons in form
 function renderRatingInput(){
   rateInput.innerHTML = '';
   for(let i=1;i<=10;i++){
@@ -287,7 +284,7 @@ function renderRatingInput(){
   }
 }
 
-/* render list */
+// Render the list of items on page
 function renderItems(){
   const query = q.value.trim().toLowerCase();
   const ft = filter.value;
@@ -389,7 +386,7 @@ function renderItems(){
     }
 
     const toggle = document.createElement('button');
-    toggle.textContent = it.watched ? 'Watched' : 'Toggle';
+    toggle.textContent = it.watched ? 'Watched' : 'Mark Watched';
     toggle.addEventListener('click', ()=> {
       it.watched = !it.watched; save(); renderItems();
     });
@@ -405,4 +402,17 @@ function renderItems(){
     del.style.color = '#ff6b6b';
     del.addEventListener('click', ()=> {
       if(confirm('ลบรายการนี้หรือไม่?')) {
-        state.items = state.items
+        state.items = state.items.filter(i => i.id !== it.id);
+        save();
+        renderItems();
+      }
+    });
+    actions.appendChild(del);
+
+    footer.appendChild(leftF);
+    footer.appendChild(actions);
+
+    card.appendChild(body);
+    card.appendChild(footer);
+
+    itemsWrap.appendChild(card);
