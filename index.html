@@ -393,11 +393,23 @@ function renderItems(){
     }
 
     const toggle = document.createElement('button');
-    toggle.textContent = it.watched ? 'The end' : 'On Air';
-    toggle.addEventListener('click', ()=> {
-      it.watched = !it.watched; save(); renderItems();
-    });
-    actions.appendChild(toggle);
+
+// ข้อความและสีเริ่มต้น
+toggle.textContent = it.watched ? 'The end' : 'On Air';
+toggle.style.backgroundColor = it.watched ? 'red' : 'green';
+toggle.style.color = 'white';
+
+// เมื่อคลิกปุ่ม
+toggle.addEventListener('click', () => {
+  it.watched = !it.watched;
+  toggle.textContent = it.watched ? 'The end' : 'On Air';
+  toggle.style.backgroundColor = it.watched ? 'red' : 'green';
+  toggle.style.color = 'white';
+  save();
+  renderItems();
+});
+
+actions.appendChild(toggle);
 
     const edit = document.createElement('button');
     edit.textContent = 'แก้ไข';
