@@ -393,7 +393,7 @@ function renderItems(){
     }
 
     const toggle = document.createElement('button');
-    toggle.textContent = it.watched ? 'Watched' : 'Toggle';
+    toggle.textContent = it.watched ? 'The end' : 'On Air';
     toggle.addEventListener('click', ()=> {
       it.watched = !it.watched; save(); renderItems();
     });
