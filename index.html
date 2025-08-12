@@ -17,22 +17,18 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
- body{
+    body{
       margin:0;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    background-color: rgba(20,24,30,0.96);
-    background-repeat: ;
-    background-position: center;
-    background-size: cover;
-    margin: 0;
-    height: 100vh;
-     color: white;
+      background-color: rgba(20,24,30,0.96);
+      background-position: center;
+      background-size: cover;
+      height: 100vh;
+      color: white;
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
       font-size:var(--app-font-size);
-      background-size:cover;
-      background-position:center;
- }
+    }
     /* container */
     .wrap{max-width:1100px;margin:28px auto;padding:18px}
 
@@ -102,7 +98,7 @@
     <header class="header">
       <div class="brand">
         <div class="image">
-        <img src="image.png" style="width:50px; height:auto;" />
+          <img src="image.png" style="width:50px; height:auto;" />
         </div>
         <div class="title">
           <h1>Linchengye</h1>
@@ -123,7 +119,6 @@
           <option value="title">ชื่อ (A-Z)</option>
         </select>
         <button id="btn-settings">Settings</button>
-        <!--<button id="btn-clear">Clear</button>--!>
       </div>
     </header>
 
@@ -232,7 +227,8 @@ const filter = $('#filter');
 const sort = $('#sort');
 const btnSettings = $('#btn-settings');
 const settingsPanel = $('#settings');
-const btnClear = $('#btn-clear');
+// ปุ่ม Clear ถูกลบออกแล้ว
+// const btnClear = $('#btn-clear');
 const btnCancel = $('#btn-cancel');
 
 const primaryColor = $('#primary-color');
@@ -409,151 +405,4 @@ function renderItems(){
     del.style.color = '#ff6b6b';
     del.addEventListener('click', ()=> {
       if(confirm('ลบรายการนี้หรือไม่?')) {
-        state.items = state.items.filter(x=> x.id !== it.id); save(); renderItems();
-      }
-    });
-    actions.appendChild(del);
-
-    footer.appendChild(leftF);
-    footer.appendChild(actions);
-
-    card.appendChild(body);
-    card.appendChild(footer);
-
-    itemsWrap.appendChild(card);
-  });
-}
-
-/* form handlers */
-form.addEventListener('submit', e=>{
-  e.preventDefault();
-  const payload = {
-    id: state.editingId || uid(),
-    title: titleI.value.trim(),
-    type: typeI.value,
-    year: yearI.value.trim(),
-    provider: providerI.value.trim(),
-    link: linkI.value.trim(),
-    poster: posterI.value.trim(),
-    rating: state.ratingTemp || 0,
-    notes: notesI.value.trim(),
-    watched: false,
-    addedAt: state.editingId ? (state.items.find(it=>it.id===state.editingId).addedAt) : Date.now()
-  };
-
-  if(!payload.title){ alert('กรุณาใส่ชื่อเรื่อง'); return; }
-
-  if(state.editingId){
-    state.items = state.items.map(it => it.id === state.editingId ? payload : it);
-    state.editingId = null;
-    btnCancel.classList.add('hidden');
-  } else {
-    state.items.unshift(payload);
-  }
-  // reset
-  form.reset();
-  state.ratingTemp = 0;
-  save();
-  renderRatingInput();
-  renderItems();
-});
-
-/* rating input quick init */
-renderRatingInput();
-
-/* quick set rating by clicking numeric buttons in form */
-rateInput.addEventListener('click', e=>{
-  if(e.target.tagName === 'BUTTON'){
-    // handled in renderRatingInput click
-  }
-});
-
-/* search/filter/sort */
-[q, filter, sort].forEach(el => el.addEventListener('input', ()=> renderItems()));
-
-/* settings toggle */
-btnSettings.addEventListener('click', ()=> {
-  settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
-});
-
-/* clear all */
-btnClear.addEventListener('click', ()=> {
-  if(confirm('ล้างรายการทั้งหมดหรือไม่? (จะไม่สามารถกู้คืนได้)')){
-    state.items = [];
-    save();
-    renderItems();
-  }
-});
-
-/* cancel edit */
-btnCancel.addEventListener('click', ()=> {
-  state.editingId = null;
-  form.reset();
-  state.ratingTemp = 0;
-  renderRatingInput();
-  btnCancel.classList.add('hidden');
-});
-
-/* settings controls */
-primaryColor.addEventListener('input', ()=> {
-  state.settings.primary = primaryColor.value;
-  setCSSVars();
-  save();
-});
-bgUrl.addEventListener('change', ()=> {
-  state.settings.bgImage = bgUrl.value.trim();
-  setCSSVars();
-  save();
-});
-blurRange.addEventListener('input', ()=> {
-  state.settings.blur = Number(blurRange.value);
-  setCSSVars();
-  save();
-});
-fontRange.addEventListener('input', ()=> {
-  state.settings.fontSize = Number(fontRange.value);
-  setCSSVars();
-  save();
-});
-btnReset.addEventListener('click', ()=> {
-  state.settings = {...defaultSettings};
-  primaryColor.value = state.settings.primary;
-  bgUrl.value = '';
-  blurRange.value = state.settings.blur;
-  fontRange.value = state.settings.fontSize;
-  setCSSVars();
-  save();
-});
-
-/* edit flow */
-function startEdit(it){
-  state.editingId = it.id;
-  titleI.value = it.title;
-  typeI.value = it.type || 'movie';
-  yearI.value = it.year || '';
-  providerI.value = it.provider || '';
-  linkI.value = it.link || '';
-  posterI.value = it.poster || '';
-  notesI.value = it.notes || '';
-  state.ratingTemp = it.rating || 0;
-  renderRatingInput();
-  btnCancel.classList.remove('hidden');
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-/* initial load */
-load();
-primaryColor.value = state.settings.primary;
-bgUrl.value = state.settings.bgImage || '';
-blurRange.value = state.settings.blur;
-fontRange.value = state.settings.fontSize;
-setCSSVars();
-renderRatingInput();
-renderItems();
-
-/* small UX: allow Enter to submit search */
-q.addEventListener('keydown', e=> { if(e.key === 'Enter'){ e.preventDefault(); renderItems(); } });
-
-</script>
-</body>
-</html>
+        state.items = state.items
